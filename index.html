@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dasturchilar_001 — Frontend va Backend’ni noldan oʼrganing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens ===== */
+:root{
+  --bg: #14162B;
+  --bg-panel: #1B1E3D;
+  --bg-panel-2: #20234A;
+  --border: #33366A;
+
+  --text: #EDEBFA;
+  --text-muted: #9497C4;
+
+  --accent: #FFB84D;
+  --accent-dim: #C98E38;
+
+  --code-keyword: #FF7AB6;
+  --code-string: #7EE787;
+  --code-func: #82AAFF;
+  --code-comment: #6B6E9C;
+
+  --font-head: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius: 10px;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+html{ scroll-behavior:smooth; }
+
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.wrap{
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+a{ color: inherit; text-decoration: none; }
+
+/* subtle grain so the flat dark bg doesn't feel like a plain gradient */
+.noise{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===== Buttons ===== */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+  white-space: nowrap;
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{
+  background: var(--accent);
+  color: #1B1200;
+}
+.btn-primary:hover{ background: #ffc670; }
+
+.btn-lg{
+  font-size: 16px;
+  padding: 15px 30px;
+}
+
+.btn-ghost{
+  border-color: var(--border);
+  color: var(--text);
+  background: transparent;
+}
+.btn-ghost:hover{ border-color: var(--accent); color: var(--accent); }
+
+/* ===== Header ===== */
+.site-header{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  background: rgba(20, 22, 43, 0.75);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+.logo{
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.logo-bracket{ color: var(--accent); }
+
+/* ===== Hero ===== */
+.hero{
+  padding: 88px 0 96px;
+  position: relative;
+  z-index: 2;
+}
+.hero-inner{
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 56px;
+  align-items: center;
+}
+.hero-kicker{
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+.hero-title{
+  font-family: var(--font-head);
+  font-size: clamp(34px, 4.4vw, 52px);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 22px;
+}
+.hero-desc{
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 46ch;
+  margin-bottom: 34px;
+}
+.hero-actions{
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.hero-note{
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* editor mock */
+.editor-window{
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.55);
+}
+.editor-titlebar{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-panel-2);
+  border-bottom: 1px solid var(--border);
+}
+.dot{
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-red{ background: #FF5F57; }
+.dot-yellow{ background: #FEBC2E; }
+.dot-green{ background: #28C840; }
+.editor-filename{
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.editor-body{
+  padding: 26px 24px;
+  min-height: 220px;
+}
+.editor-body pre{
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.cursor{
+  color: var(--accent);
+  animation: blink 1s step-start infinite;
+}
+@keyframes blink{ 50%{ opacity: 0; } }
+
+/* ===== Section shared ===== */
+section{ position: relative; z-index: 2; }
+.section-title{
+  font-family: var(--font-head);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.section-sub{
+  color: var(--text-muted);
+  max-width: 60ch;
+  margin-bottom: 40px;
+}
+
+/* ===== Roadmap / file tree ===== */
+.roadmap{ padding: 90px 0 40px; }
+
+.tree{
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 8px;
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+}
+.tree-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+}
+.tree-folder{
+  font-weight: 600;
+  margin-top: 6px;
+}
+.tree-folder:first-child{ margin-top: 0; }
+.tree-label{ flex: 1; }
+.tree-tag{
+  font-size: 11.5px;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.tree-children .tree-row{
+  padding-left: 40px;
+  color: var(--text-muted);
+}
+.tree-children .tree-row:hover{
+  background: var(--bg-panel-2);
+  color: var(--text);
+}
+
+/* ===== Terminal / stats ===== */
+.stats{ padding: 70px 0; }
+.terminal{
+  background: #0F1126;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.terminal-body{
+  padding: 26px 24px 30px;
+  font-family: var(--font-mono);
+  font-size: 14.5px;
+  color: var(--text-muted);
+}
+.terminal-body p{ margin-bottom: 10px; }
+.prompt{ color: var(--accent); margin-right: 8px; }
+.stat-line{
+  padding-left: 24px;
+  color: var(--text);
+  font-size: 16px;
+}
+.stat-num{
+  color: var(--code-string);
+  font-weight: 600;
+  font-size: 19px;
+}
+.stat-suffix{ color: var(--code-string); font-weight: 600; }
+.typed-final{ color: var(--code-func); }
+.cursor-inline{ margin-left: 2px; }
+
+/* ===== Why grid ===== */
+.why{ padding: 90px 0; }
+.why-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.why-item{
+  background: var(--bg-panel);
+  padding: 32px 30px;
+}
+.why-index{
+  display: block;
+  font-family: var(--font-mono);
+  color: var(--accent-dim);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.why-item h3{
+  font-family: var(--font-head);
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.why-item p{
+  color: var(--text-muted);
+  font-size: 15px;
+  max-width: 42ch;
+}
+
+/* ===== Final CTA ===== */
+.final-cta{
+  padding: 110px 0 100px;
+  text-align: center;
+}
+.final-cta-inner h2{
+  font-family: var(--font-head);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.final-cta-inner p{
+  color: var(--text-muted);
+  font-size: 16.5px;
+  margin-bottom: 30px;
+}
+.final-link{
+  margin-top: 18px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+/* ===== Footer ===== */
+.site-footer{
+  border-top: 1px solid var(--border);
+  padding: 26px 0;
+}
+.footer-inner{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.footer-inner a:hover{ color: var(--accent); }
+
+/* ===== Responsive ===== */
+@media (max-width: 880px){
+  .hero-inner{
+    grid-template-columns: 1fr;
+  }
+  .why-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px){
+  .wrap{ padding: 0 20px; }
+  .hero{ padding: 56px 0 64px; }
+  .header-cta{ padding: 10px 16px; font-size: 13px; }
+}
+
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto; }
+  .cursor{ animation: none; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="logo">
+      <span class="logo-bracket">&lt;</span>dasturchilar_001<span class="logo-bracket">/&gt;</span>
+    </div>
+    <a href="https://t.me/dasturchilar_00001" target="_blank" rel="noopener" class="btn btn-ghost header-cta">
+      Telegram’ga oʼtish
+    </a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-inner">
+    <div class="hero-text">
+      <p class="hero-kicker">Bepul Telegram kanal</p>
+      <h1 class="hero-title">
+        Kompyuter savodxonligidan<br>
+        real loyihalar yozishgacha.
+      </h1>
+      <p class="hero-desc">
+        Dasturchilar_001 — noldan boshlab kompyuter savodxonligi, Frontend
+        va Backend yoʼnalishlarini oʼzbek tilida, qadam-baqadam oʼrgatadigan
+        Telegram kanal. Nazariya emas, amaliyot bilan.
+      </p>
+      <div class="hero-actions">
+        <a href="https://t.me/dasturchilar_00001" target="_blank" rel="noopener" class="btn btn-primary">
+          Kanalga qoʼshilish
+        </a>
+        <span class="hero-note">t.me/dasturchilar_00001</span>
+      </div>
+    </div>
+
+    <div class="hero-editor">
+      <div class="editor-window">
+        <div class="editor-titlebar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="editor-filename">maqsad.js</span>
+        </div>
+        <div class="editor-body">
+          <pre><code id="typed-code"></code><span class="cursor">▍</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP / WHAT YOU LEARN -->
+<section class="roadmap" id="roadmap">
+  <div class="wrap">
+    <h2 class="section-title">Kanalda nima bor</h2>
+    <p class="section-sub">Uchta yoʼnalish — bittasidan boshlab, xohlasangiz hammasini bosqichma-bosqich bosib oʼtasiz.</p>
+
+    <div class="tree">
+
+      <div class="tree-row tree-folder">
+        <span class="tree-icon">📁</span>
+        <span class="tree-label">kompyuter_savodxonligi</span>
+        <span class="tree-tag">boshlangʼich</span>
+      </div>
+      <div class="tree-children">
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">kompyuter va operatsion tizim asoslari</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">fayllar, papkalar, qisqa tugmalar</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">internetdan xavfsiz va samarali foydalanish</span>
+        </div>
+      </div>
+
+      <div class="tree-row tree-folder">
+        <span class="tree-icon">📁</span>
+        <span class="tree-label">frontend</span>
+        <span class="tree-tag">interfeys</span>
+      </div>
+      <div class="tree-children">
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">HTML — sahifa tuzilishi</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">CSS — dizayn va joylashuv</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">JavaScript — interaktivlik</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">React bilan real loyihalar</span>
+        </div>
+      </div>
+
+      <div class="tree-row tree-folder">
+        <span class="tree-icon">📁</span>
+        <span class="tree-label">backend</span>
+        <span class="tree-tag">server</span>
+      </div>
+      <div class="tree-children">
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">server mantigʼi va API asoslari</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">ma'lumotlar bazasi (SQL)</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">autentifikatsiya va xavfsizlik</span>
+        </div>
+        <div class="tree-row">
+          <span class="tree-icon">📄</span>
+          <span class="tree-label">loyihani serverga joylash (deploy)</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL STATS -->
+<section class="stats">
+  <div class="wrap">
+    <div class="terminal">
+      <div class="editor-titlebar">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="editor-filename">holat.sh</span>
+      </div>
+      <div class="terminal-body">
+        <p><span class="prompt">$</span> kanal --status</p>
+        <p class="stat-line"><span class="stat-num" data-target="3">0</span><span class="stat-suffix"></span> aʼzo qoʼshildi</p>
+        <p class="stat-line"><span class="stat-num" data-target="20">0</span><span class="stat-suffix">+</span> dars eʼlon qilindi</p>
+        <p class="stat-line"><span class="stat-num" data-target="5">0</span><span class="stat-suffix">+</span> real loyiha koʼrib chiqildi</p>
+        <p><span class="prompt">$</span> <span class="typed-final">tayyor.</span><span class="cursor cursor-inline">▍</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY JOIN -->
+<section class="why" id="why">
+  <div class="wrap">
+    <h2 class="section-title">Nega aynan shu kanal</h2>
+    <div class="why-grid">
+      <div class="why-item">
+        <span class="why-index">01</span>
+        <h3>Oʼzbek tilida, sodda tushuntirilgan</h3>
+        <p>Murakkab atamalar emas, hayotiy misollar bilan — birinchi darsdanoq nima qilayotganingizni tushunasiz.</p>
+      </div>
+      <div class="why-item">
+        <span class="why-index">02</span>
+        <h3>Nazariya emas, amaliyot</h3>
+        <p>Har bir mavzu real kod, real loyiha bilan mustahkamlanadi — konspekt emas, ishlaydigan natija chiqadi.</p>
+      </div>
+      <div class="why-item">
+        <span class="why-index">03</span>
+        <h3>Bosqichma-bosqich yoʼl xaritasi</h3>
+        <p>Qayerdan boshlash, keyin nimaga oʼtish — hammasi tartib bilan, adashib qolmaysiz.</p>
+      </div>
+      <div class="why-item">
+        <span class="why-index">04</span>
+        <h3>Bepul va doimiy yangilanadi</h3>
+        <p>Kanal hech qanday toʼlovsiz — yangi darslar va materiallar muntazam qoʼshib boriladi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="wrap final-cta-inner">
+    <h2>Birinchi qatorni bugun yozing.</h2>
+    <p>Qoʼshiling, birinchi darsdan boshlang — qolgani izidan keladi.</p>
+    <a href="https://t.me/dasturchilar_00001" target="_blank" rel="noopener" class="btn btn-primary btn-lg">
+      Telegram kanalga qoʼshilish
+    </a>
+    <p class="final-link">t.me/dasturchilar_00001</p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <span>&lt;dasturchilar_001/&gt;</span>
+    <a href="https://t.me/dasturchilar_00001" target="_blank" rel="noopener">t.me/dasturchilar_00001</a>
+  </div>
+</footer>
+
+<script>
+// ===== Hero code typing animation =====
+const codeLines = [
+  { text: "const maqsad = ", cls: null },
+  { text: "\"dasturchi boʼlish\"", cls: "code-string" },
+  { text: ";\n", cls: null },
+  { text: "\n", cls: null },
+  { text: "function ", cls: "code-keyword" },
+  { text: "boshla", cls: "code-func" },
+  { text: "() {\n", cls: null },
+  { text: "  ", cls: null },
+  { text: "join", cls: "code-func" },
+  { text: "(", cls: null },
+  { text: "\"t.me/dasturchilar_00001\"", cls: "code-string" },
+  { text: ");\n", cls: null },
+  { text: "  ", cls: null },
+  { text: "// birinchi darsdan boshlang\n", cls: "code-comment" },
+  { text: "  ", cls: null },
+  { text: "return ", cls: "code-keyword" },
+  { text: "\"muvaffaqiyat\"", cls: "code-string" },
+  { text: ";\n", cls: null },
+  { text: "}", cls: null },
+];
+
+function typeCode(target, lines, speed) {
+  let li = 0, ci = 0;
+  let currentSpan = null;
+
+  function step() {
+    if (li >= lines.length) return;
+
+    const line = lines[li];
+
+    if (ci === 0) {
+      currentSpan = document.createElement("span");
+      if (line.cls) currentSpan.className = line.cls;
+      target.appendChild(currentSpan);
+    }
+
+    currentSpan.textContent += line.text[ci];
+    ci++;
+
+    if (ci >= line.text.length) {
+      li++;
+      ci = 0;
+    }
+
+    setTimeout(step, speed);
+  }
+
+  step();
+}
+
+const typedEl = document.getElementById("typed-code");
+if (typedEl) {
+  typeCode(typedEl, codeLines, 26);
+}
+
+// ===== Stat counters (animate when scrolled into view) =====
+function animateCount(el) {
+  const target = parseInt(el.dataset.target, 10);
+  const duration = 1200;
+  const start = performance.now();
+
+  function frame(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target);
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      el.textContent = target;
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+const statEls = document.querySelectorAll(".stat-num");
+
+if ("IntersectionObserver" in window && statEls.length) {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          animateCount(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.4 }
+  );
+  statEls.forEach((el) => observer.observe(el));
+} else {
+  statEls.forEach(animateCount);
+}
+
+</script>
+</body>
+</html>
